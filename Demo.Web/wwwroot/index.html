@@ -297,6 +297,60 @@
         footer a:hover {
             text-decoration: underline;
         }
+
+        .search-container {
+            margin: 15px 0;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #007bff;
+        }
+
+        .btn-search {
+            background-color: #17a2b8;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .btn-search:hover {
+            background-color: #138496;
+        }
+
+        .btn-clear {
+            background-color: #6c757d;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .btn-clear:hover {
+            background-color: #545b62;
+        }
+
+        .search-results {
+            color: #666;
+            font-size: 13px;
+            margin: 10px 0;
+        }
     </style>
 </head>
 <body>
@@ -332,6 +386,15 @@
         <!-- Klantenbeheer Sectie -->
         <section id="klanten-sectie">
             <h2>Klantenbeheer</h2>
+            
+            <!-- Zoekbalk voor Klanten -->
+            <div class="search-container">
+                <input type="text" id="klanten-search-input" class="search-input" placeholder="Zoek op naam, email of telefoon...">
+                <button class="btn btn-search" onclick="searchKlanten()">Zoeken</button>
+                <button class="btn btn-clear" onclick="clearKlantenSearch()">Toon Alles</button>
+            </div>
+            <div id="klanten-search-results" class="search-results"></div>
+            
             <div id="klanten-loading" class="loading">Klanten laden...</div>
             <table id="klanten-tabel" style="display:none;">
                 <thead>
@@ -377,6 +440,15 @@
         <!-- Boeken Sectie -->
         <section id="boeken-sectie">
             <h2>Boeken</h2>
+            
+            <!-- Zoekbalk voor Boeken -->
+            <div class="search-container">
+                <input type="text" id="boeken-search-input" class="search-input" placeholder="Zoek op titel, auteur of ISBN...">
+                <button class="btn btn-search" onclick="searchBoeken()">Zoeken</button>
+                <button class="btn btn-clear" onclick="clearBoekenSearch()">Toon Alles</button>
+            </div>
+            <div id="boeken-search-results" class="search-results"></div>
+            
             <div id="boeken-loading" class="loading">Boeken laden...</div>
             <table id="boeken-tabel" style="display:none;">
                 <thead>
@@ -514,5 +586,6 @@
     </div>
 
     <script src="app.js"></script>
+    <script src="search-functions.js"></script>
 </body>
 </html>

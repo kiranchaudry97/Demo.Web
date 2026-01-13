@@ -36,12 +36,8 @@ public class AppDbContext : DbContext
             .Property(or => or.Prijs)
             .HasColumnType("decimal(18,2)");
 
-        // Seed data: 3 klanten
-        modelBuilder.Entity<Klant>().HasData(
-            new Klant { Id = 1, Naam = "Jan Jansen", Email = "jan.jansen@example.com", Telefoon = "0612345678", Adres = "Hoofdstraat 1, Amsterdam" },
-            new Klant { Id = 2, Naam = "Piet Pietersen", Email = "piet.pietersen@example.com", Telefoon = "0687654321", Adres = "Kerkstraat 25, Rotterdam" },
-            new Klant { Id = 3, Naam = "Test Gebruiker", Email = "test@test.be", Telefoon = "0698765432", Adres = "Teststraat 10, Utrecht" }
-        );
+        // ?? Note: Klant seed data is now handled in Program.cs with encryption
+        // Seed data is added at runtime with encrypted PII fields
 
         // Seed data: 10 boeken met voorraad
         modelBuilder.Entity<Boek>().HasData(
