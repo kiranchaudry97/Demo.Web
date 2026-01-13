@@ -13,15 +13,21 @@ public class BoekenController : ControllerBase
 {
     private readonly AppDbContext _context;
     private readonly IRabbitMqService _rabbitMqService;
+    private readonly IRabbitMqAdvancedService _rabbitMqAdvancedService;
+    private readonly IMessageValidationService _validationService;
     private readonly ILogger<BoekenController> _logger;
 
     public BoekenController(
         AppDbContext context,
         IRabbitMqService rabbitMqService,
+        IRabbitMqAdvancedService rabbitMqAdvancedService,
+        IMessageValidationService validationService,
         ILogger<BoekenController> logger)
     {
         _context = context;
         _rabbitMqService = rabbitMqService;
+        _rabbitMqAdvancedService = rabbitMqAdvancedService;
+        _validationService = validationService;
         _logger = logger;
     }
 
@@ -39,6 +45,36 @@ public class BoekenController : ControllerBase
                 ISBN = b.ISBN
             })
             .ToListAsync();
+
+        return Ok(boeken);
+    }
+
+    [HttpGet("search")]
+    public async Task<ActionResult<IEnumerable<BoekDto>>> SearchBoeken([FromQuery] string query)
+    {
+        if (string.IsNullOrWhiteSpace(query))
+        {
+            return BadRequest(new { error = "Zoekterm is verplicht" });
+        }
+
+        var lowerQuery = query.ToLower();
+
+        var boeken = await _context.Boeken
+            .Where(b => b.Titel.ToLower().Contains(lowerQuery) ||
+                       b.Auteur.ToLower().Contains(lowerQuery) ||
+                       b.ISBN.ToLower().Contains(lowerQuery))
+            .Select(b => new BoekDto
+            {
+                Id = b.Id,
+                Titel = b.Titel,
+                Auteur = b.Auteur,
+                Prijs = b.Prijs,
+                VoorraadAantal = b.VoorraadAantal,
+                ISBN = b.ISBN
+            })
+            .ToListAsync();
+
+        _logger.LogInformation($"Zoekterm '{query}' leverde {boeken.Count} resultaten op");
 
         return Ok(boeken);
     }
@@ -102,6 +138,30 @@ public class BoekenController : ControllerBase
 
         _logger.LogInformation($"Boek aangemaakt: {boek.Titel} (ID: {boek.Id})");
 
+        // ?? Publish entity created event to RabbitMQ (Advanced Pattern)
+        var entityChange = new EntityChangeMessage
+        {
+            EntityType = EntityType.Boek,
+            Action = ActionType.Created,
+            EntityId = boek.Id,
+            EntityName = boek.Titel,
+            Timestamp = DateTime.UtcNow,
+            Data = new Dictionary<string, object>
+            {
+                { "isbn", boek.ISBN },
+                { "auteur", boek.Auteur },
+                { "prijs", boek.Prijs },
+                { "voorraad", boek.VoorraadAantal }
+            }
+        };
+
+        // Validate and publish
+        var (isValid, errors) = await _validationService.ValidateAndLogAsync(entityChange, "EntityChangeMessage");
+        if (isValid)
+        {
+            await _rabbitMqAdvancedService.PublishEntityEventAsync("boek", "created", entityChange);
+        }
+
         boekDto.Id = boek.Id;
         return CreatedAtAction(nameof(GetBoek), new { id = boek.Id }, boekDto);
     }
@@ -125,6 +185,29 @@ public class BoekenController : ControllerBase
         await _context.SaveChangesAsync();
 
         _logger.LogInformation($"Boek bijgewerkt: {boek.Titel} (ID: {boek.Id})");
+
+        // ?? Publish entity updated event
+        var entityChange = new EntityChangeMessage
+        {
+            EntityType = EntityType.Boek,
+            Action = ActionType.Updated,
+            EntityId = boek.Id,
+            EntityName = boek.Titel,
+            Timestamp = DateTime.UtcNow,
+            Data = new Dictionary<string, object>
+            {
+                { "isbn", boek.ISBN },
+                { "auteur", boek.Auteur },
+                { "prijs", boek.Prijs },
+                { "voorraad", boek.VoorraadAantal }
+            }
+        };
+
+        var (isValid, errors) = await _validationService.ValidateAndLogAsync(entityChange, "EntityChangeMessage");
+        if (isValid)
+        {
+            await _rabbitMqAdvancedService.PublishEntityEventAsync("boek", "updated", entityChange);
+        }
 
         return NoContent();
     }
@@ -174,22 +257,30 @@ public class BoekenController : ControllerBase
             }
         };
 
+        // Validate messages before publishing
+        var (isValidChange, changeErrors) = await _validationService.ValidateAndLogAsync(entityChange, "EntityChangeMessage");
+
         // Delete from database
         _context.Boeken.Remove(boek);
         await _context.SaveChangesAsync();
 
-        // Publish to RabbitMQ (async, don't wait)
+        // ?? Publish to RabbitMQ using Advanced Patterns
         _ = Task.Run(async () =>
         {
             try
             {
-                await _rabbitMqService.PublishEntityChangeAsync("boek_deleted", deleteMessage);
-                await _rabbitMqService.PublishEntityChangeAsync("entity_changes", entityChange);
-                _logger.LogInformation($"Boek delete event gepubliceerd naar RabbitMQ: {boek.Titel} (ID: {boek.Id})");
+                if (isValidChange)
+                {
+                    // Use topic exchange with routing key
+                    await _rabbitMqAdvancedService.PublishEntityEventAsync("boek", "deleted", deleteMessage);
+                    await _rabbitMqAdvancedService.PublishEntityEventAsync("boek", "deleted", entityChange);
+                }
+                
+                _logger.LogInformation($"? Boek delete events gepubliceerd naar RabbitMQ (Advanced): {boek.Titel} (ID: {boek.Id})");
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Fout bij publiceren delete event naar RabbitMQ: {ex.Message}");
+                _logger.LogError($"? Fout bij publiceren delete event naar RabbitMQ: {ex.Message}");
             }
         });
 

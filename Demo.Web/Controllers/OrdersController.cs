@@ -13,6 +13,8 @@ public class OrdersController : ControllerBase
 {
     private readonly AppDbContext _context;
     private readonly IRabbitMqService _rabbitMqService;
+    private readonly IRabbitMqAdvancedService _rabbitMqAdvancedService;
+    private readonly IMessageValidationService _validationService;
     private readonly ISapService _sapService;
     private readonly ISalesforceService _salesforceService;
     private readonly ILogger<OrdersController> _logger;
@@ -20,12 +22,16 @@ public class OrdersController : ControllerBase
     public OrdersController(
         AppDbContext context,
         IRabbitMqService rabbitMqService,
+        IRabbitMqAdvancedService rabbitMqAdvancedService,
+        IMessageValidationService validationService,
         ISapService sapService,
         ISalesforceService salesforceService,
         ILogger<OrdersController> logger)
     {
         _context = context;
         _rabbitMqService = rabbitMqService;
+        _rabbitMqAdvancedService = rabbitMqAdvancedService;
+        _validationService = validationService;
         _sapService = sapService;
         _salesforceService = salesforceService;
         _logger = logger;
@@ -199,8 +205,19 @@ public class OrdersController : ControllerBase
                     }).ToList()
                 };
 
-                // Publisher: Verstuur bericht naar RabbitMQ queue
-                await _rabbitMqService.PublishOrderToSalesforceAsync(orderMessage);
+                // ? Validate message before publishing
+                var (isValid, errors) = await _validationService.ValidateAndLogAsync(orderMessage, "OrderMessage");
+                
+                if (isValid)
+                {
+                    // ?? Publish to Advanced RabbitMQ (Topic Exchange)
+                    await _rabbitMqAdvancedService.PublishOrderEventAsync("created", orderMessage);
+                    _logger.LogInformation($"? Order gepubliceerd naar RabbitMQ (orders.topic): {order.OrderNummer}");
+                }
+                else
+                {
+                    _logger.LogWarning($"?? Order message validation failed: {string.Join(", ", errors)}");
+                }
                 
                 // Direct Salesforce call (backup voor als consumer niet draait)
                 var salesforceId = await _salesforceService.CreateOrderAsync(orderMessage);
@@ -212,7 +229,7 @@ public class OrdersController : ControllerBase
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Salesforce integratie mislukt: {ex.Message}");
+                _logger.LogError($"? Salesforce integratie mislukt: {ex.Message}");
                 return "ERROR";
             }
         });

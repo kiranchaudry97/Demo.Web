@@ -13,31 +13,79 @@ public class KlantenController : ControllerBase
 {
     private readonly AppDbContext _context;
     private readonly IRabbitMqService _rabbitMqService;
+    private readonly IRabbitMqAdvancedService _rabbitMqAdvancedService;
+    private readonly IEncryptionService _encryptionService;
+    private readonly IMessageValidationService _validationService;
     private readonly ILogger<KlantenController> _logger;
 
     public KlantenController(
         AppDbContext context, 
         IRabbitMqService rabbitMqService,
+        IRabbitMqAdvancedService rabbitMqAdvancedService,
+        IEncryptionService encryptionService,
+        IMessageValidationService validationService,
         ILogger<KlantenController> logger)
     {
         _context = context;
         _rabbitMqService = rabbitMqService;
+        _rabbitMqAdvancedService = rabbitMqAdvancedService;
+        _encryptionService = encryptionService;
+        _validationService = validationService;
         _logger = logger;
     }
 
     [HttpGet]
     public async Task<ActionResult<IEnumerable<KlantDto>>> GetKlanten()
     {
-        var klanten = await _context.Klanten
+        var klanten = await _context.Klanten.ToListAsync();
+        
+        // ?? Decrypt PII data before returning
+        var klantDtos = klanten.Select(k => new KlantDto
+        {
+            Id = k.Id,
+            Naam = k.Naam,
+            Email = _encryptionService.Decrypt(k.Email),
+            Telefoon = _encryptionService.Decrypt(k.Telefoon),
+            Adres = _encryptionService.Decrypt(k.Adres)
+        }).ToList();
+
+        return Ok(klantDtos);
+    }
+
+    [HttpGet("search")]
+    public async Task<ActionResult<IEnumerable<KlantDto>>> SearchKlanten([FromQuery] string query)
+    {
+        if (string.IsNullOrWhiteSpace(query))
+        {
+            return BadRequest(new { error = "Zoekterm is verplicht" });
+        }
+
+        var lowerQuery = query.ToLower();
+
+        // ?? Note: Searching encrypted data requires full table scan and decryption
+        // For production: Use separate searchable index or hash-based search
+        var allKlanten = await _context.Klanten.ToListAsync();
+        
+        var klanten = allKlanten
+            .Where(k => 
+            {
+                var email = _encryptionService.Decrypt(k.Email);
+                var telefoon = _encryptionService.Decrypt(k.Telefoon);
+                return k.Naam.ToLower().Contains(lowerQuery) ||
+                       email.ToLower().Contains(lowerQuery) ||
+                       telefoon.Contains(query);
+            })
             .Select(k => new KlantDto
             {
                 Id = k.Id,
                 Naam = k.Naam,
-                Email = k.Email,
-                Telefoon = k.Telefoon,
-                Adres = k.Adres
+                Email = _encryptionService.Decrypt(k.Email),
+                Telefoon = _encryptionService.Decrypt(k.Telefoon),
+                Adres = _encryptionService.Decrypt(k.Adres)
             })
-            .ToListAsync();
+            .ToList();
+
+        _logger.LogInformation($"Zoekterm '{query}' leverde {klanten.Count} klanten op");
 
         return Ok(klanten);
     }
@@ -52,13 +100,14 @@ public class KlantenController : ControllerBase
             return NotFound(new { error = "Klant niet gevonden" });
         }
 
+        // ?? Decrypt PII data
         var klantDto = new KlantDto
         {
             Id = klant.Id,
             Naam = klant.Naam,
-            Email = klant.Email,
-            Telefoon = klant.Telefoon,
-            Adres = klant.Adres
+            Email = _encryptionService.Decrypt(klant.Email),
+            Telefoon = _encryptionService.Decrypt(klant.Telefoon),
+            Adres = _encryptionService.Decrypt(klant.Adres)
         };
 
         return Ok(klantDto);
@@ -67,18 +116,41 @@ public class KlantenController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<KlantDto>> CreateKlant(KlantDto klantDto)
     {
+        // ?? Encrypt PII data before storing
         var klant = new Klant
         {
             Naam = klantDto.Naam,
-            Email = klantDto.Email,
-            Telefoon = klantDto.Telefoon,
-            Adres = klantDto.Adres
+            Email = _encryptionService.Encrypt(klantDto.Email),
+            Telefoon = _encryptionService.Encrypt(klantDto.Telefoon),
+            Adres = _encryptionService.Encrypt(klantDto.Adres)
         };
 
         _context.Klanten.Add(klant);
         await _context.SaveChangesAsync();
 
-        _logger.LogInformation($"Klant aangemaakt: {klant.Naam} (ID: {klant.Id})");
+        _logger.LogInformation($"?? Klant aangemaakt met encrypted PII: {klant.Naam} (ID: {klant.Id})");
+
+        // ?? Publish entity created event to RabbitMQ (Advanced Pattern)
+        var entityChange = new EntityChangeMessage
+        {
+            EntityType = EntityType.Klant,
+            Action = ActionType.Created,
+            EntityId = klant.Id,
+            EntityName = klant.Naam,
+            Timestamp = DateTime.UtcNow,
+            Data = new Dictionary<string, object>
+            {
+                { "email", klantDto.Email }, // Use decrypted for messaging
+                { "telefoon", klantDto.Telefoon }
+            }
+        };
+
+        // Validate and publish
+        var (isValid, errors) = await _validationService.ValidateAndLogAsync(entityChange, "EntityChangeMessage");
+        if (isValid)
+        {
+            await _rabbitMqAdvancedService.PublishEntityEventAsync("klant", "created", entityChange);
+        }
 
         klantDto.Id = klant.Id;
         return CreatedAtAction(nameof(GetKlant), new { id = klant.Id }, klantDto);
@@ -94,14 +166,36 @@ public class KlantenController : ControllerBase
             return NotFound(new { error = "Klant niet gevonden" });
         }
 
+        // ?? Encrypt PII data before updating
         klant.Naam = klantDto.Naam;
-        klant.Email = klantDto.Email;
-        klant.Telefoon = klantDto.Telefoon;
-        klant.Adres = klantDto.Adres;
+        klant.Email = _encryptionService.Encrypt(klantDto.Email);
+        klant.Telefoon = _encryptionService.Encrypt(klantDto.Telefoon);
+        klant.Adres = _encryptionService.Encrypt(klantDto.Adres);
 
         await _context.SaveChangesAsync();
 
-        _logger.LogInformation($"Klant bijgewerkt: {klant.Naam} (ID: {klant.Id})");
+        _logger.LogInformation($"?? Klant bijgewerkt met encrypted PII: {klant.Naam} (ID: {klant.Id})");
+
+        // ?? Publish entity updated event
+        var entityChange = new EntityChangeMessage
+        {
+            EntityType = EntityType.Klant,
+            Action = ActionType.Updated,
+            EntityId = klant.Id,
+            EntityName = klant.Naam,
+            Timestamp = DateTime.UtcNow,
+            Data = new Dictionary<string, object>
+            {
+                { "email", klantDto.Email },
+                { "telefoon", klantDto.Telefoon }
+            }
+        };
+
+        var (isValid, errors) = await _validationService.ValidateAndLogAsync(entityChange, "EntityChangeMessage");
+        if (isValid)
+        {
+            await _rabbitMqAdvancedService.PublishEntityEventAsync("klant", "updated", entityChange);
+        }
 
         return NoContent();
     }
@@ -123,12 +217,16 @@ public class KlantenController : ControllerBase
             return BadRequest(new { error = "Kan klant niet verwijderen. Er zijn nog orders gekoppeld aan deze klant." });
         }
 
+        // ?? Decrypt data before creating delete message
+        var decryptedEmail = _encryptionService.Decrypt(klant.Email);
+        var decryptedTelefoon = _encryptionService.Decrypt(klant.Telefoon);
+
         // Create delete message BEFORE deleting from database
         var deleteMessage = new KlantDeletedMessage
         {
             KlantId = klant.Id,
             KlantNaam = klant.Naam,
-            Email = klant.Email,
+            Email = decryptedEmail, // Use decrypted for messaging
             DeletedAt = DateTime.UtcNow,
             Reason = "User requested deletion via API"
         };
@@ -143,27 +241,40 @@ public class KlantenController : ControllerBase
             Timestamp = DateTime.UtcNow,
             Data = new Dictionary<string, object>
             {
-                { "email", klant.Email },
-                { "telefoon", klant.Telefoon }
+                { "email", decryptedEmail },
+                { "telefoon", decryptedTelefoon }
             }
         };
+
+        // Validate messages before publishing
+        var (isValidDelete, deleteErrors) = await _validationService.ValidateAndLogAsync(deleteMessage, "KlantDeletedMessage");
+        var (isValidChange, changeErrors) = await _validationService.ValidateAndLogAsync(entityChange, "EntityChangeMessage");
 
         // Delete from database
         _context.Klanten.Remove(klant);
         await _context.SaveChangesAsync();
 
-        // Publish to RabbitMQ (async, don't wait)
+        // ?? Publish to RabbitMQ using Advanced Patterns
         _ = Task.Run(async () =>
         {
             try
             {
-                await _rabbitMqService.PublishEntityChangeAsync("klant_deleted", deleteMessage);
-                await _rabbitMqService.PublishEntityChangeAsync("entity_changes", entityChange);
-                _logger.LogInformation($"Klant delete event gepubliceerd naar RabbitMQ: {klant.Naam} (ID: {klant.Id})");
+                if (isValidDelete)
+                {
+                    // Use topic exchange with routing key
+                    await _rabbitMqAdvancedService.PublishEntityEventAsync("klant", "deleted", deleteMessage);
+                }
+                
+                if (isValidChange)
+                {
+                    await _rabbitMqAdvancedService.PublishEntityEventAsync("klant", "deleted", entityChange);
+                }
+                
+                _logger.LogInformation($"? Klant delete events gepubliceerd naar RabbitMQ (Advanced): {klant.Naam} (ID: {klant.Id})");
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Fout bij publiceren delete event naar RabbitMQ: {ex.Message}");
+                _logger.LogError($"? Fout bij publiceren delete event naar RabbitMQ: {ex.Message}");
             }
         });
 

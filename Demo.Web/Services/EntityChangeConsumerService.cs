@@ -28,12 +28,36 @@ public class EntityChangeConsumerService : BackgroundService
     {
         try
         {
+            var hostName = _configuration["RabbitMQ:HostName"] ?? "localhost";
+            var port = int.TryParse(_configuration["RabbitMQ:Port"], out var parsedPort) ? parsedPort : 5672;
+            var userName = _configuration["RabbitMQ:UserName"];
+            var password = _configuration["RabbitMQ:Password"];
+            var virtualHost = _configuration["RabbitMQ:VirtualHost"] ?? "/";
+
+            if (string.IsNullOrWhiteSpace(userName) || string.IsNullOrWhiteSpace(password))
+            {
+                _logger.LogWarning("RabbitMQ credentials ontbreken in configuratie. Entity Change Consumer wordt uitgeschakeld.");
+                _connection = null;
+                _channelEntityChanges = null;
+                _channelKlantDeleted = null;
+                _channelBoekDeleted = null;
+                return;
+            }
+
+            _logger.LogInformation(
+                "EntityChangeConsumer connecting to {HostName}:{Port} vhost '{VirtualHost}' as user '{UserName}'",
+                hostName,
+                port,
+                virtualHost,
+                userName);
+
             var factory = new ConnectionFactory
             {
-                HostName = _configuration["RabbitMQ:HostName"] ?? "localhost",
-                Port = int.Parse(_configuration["RabbitMQ:Port"] ?? "5672"),
-                UserName = _configuration["RabbitMQ:UserName"] ?? "guest",
-                Password = _configuration["RabbitMQ:Password"] ?? "guest",
+                HostName = hostName,
+                Port = port,
+                UserName = userName,
+                Password = password,
+                VirtualHost = virtualHost,
                 DispatchConsumersAsync = true
             };
 
