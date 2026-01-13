@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cookie Policy - Bookstore</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 32px;
+        }
+
+        .meta {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #eee;
+        }
+
+        h2 {
+            color: #333;
+            margin: 30px 0 15px 0;
+            font-size: 24px;
+        }
+
+        p {
+            margin-bottom: 15px;
+            color: #555;
+        }
+
+        ul {
+            margin: 15px 0 15px 30px;
+            color: #555;
+        }
+
+        li {
+            margin-bottom: 8px;
+        }
+
+        .highlight {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+            padding: 15px;
+            margin: 20px 0;
+            font-size: 18px;
+            font-weight: bold;
+            color: #155724;
+        }
+
+        .info {
+            background: #e7f3ff;
+            border-left: 4px solid #007bff;
+            padding: 15px;
+            margin: 20px 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        thead {
+            background-color: #333;
+            color: white;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 30px;
+            color: #007bff;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Cookie Policy</h1>
+        <div class="meta">
+            <strong>Laatste update:</strong> 15 januari 2024<br>
+            <strong>Versie:</strong> 1.0<br>
+            <strong>Taal:</strong> Nederlands
+        </div>
+
+        <div class="highlight">
+            Deze API gebruikt GEEN cookies!
+        </div>
+
+        <h2>1. Wat zijn cookies?</h2>
+        <p>
+            Cookies zijn kleine tekstbestanden die op uw apparaat worden opgeslagen 
+            wanneer u een website bezoekt. Ze worden gebruikt voor verschillende doeleinden, 
+            zoals het onthouden van voorkeuren of het volgen van gebruikersgedrag.
+        </p>
+
+        <h2>2. Gebruikt deze API cookies?</h2>
+        <p><strong>NEEN - Deze API gebruikt GEEN cookies.</strong></p>
+
+        <p><strong>Reden:</strong> Dit is een REST API die authenticatie doet via API Keys in headers (<code>X-API-Key</code>).
+        Er zijn geen sessies die onthouden moeten worden.</p>
+
+        <div class="info">
+            <p><strong>De web interface (indien gebruikt) gebruikt mogelijk:</strong></p>
+            <ul>
+                <li>LocalStorage voor client-side state management</li>
+                <li>Geen cookies voor authenticatie</li>
+                <li>Geen third-party tracking cookies</li>
+            </ul>
+        </div>
+
+        <h2>3. Welke alternatieven gebruiken wij?</h2>
+        <p><strong>In plaats van cookies:</strong></p>
+
+        <h3>A. API Key Authenticatie</h3>
+        <ul>
+            <li>X-API-Key: demo-api-key-12345</li>
+            <li>Geen sessies op server</li>
+            <li>Stateless authentication</li>
+        </ul>
+
+        <h3>B. LocalStorage (client-side)</h3>
+        <ul>
+            <li>Tijdelijke opslag in browser</li>
+            <li>Geen data naar server</li>
+            <li>Alleen voor UI state</li>
+        </ul>
+
+        <h3>C. HTTP Headers</h3>
+        <ul>
+            <li>Content-Type: application/json</li>
+            <li>Authorization informatie in headers</li>
+        </ul>
+
+        <h2>4. Third-party cookies</h2>
+        <p><strong>Wij gebruiken GEEN third-party cookies:</strong></p>
+        <ul>
+            <li>Geen Google Analytics</li>
+            <li>Geen Facebook Pixel</li>
+            <li>Geen advertentienetwerken</li>
+            <li>Geen social media tracking</li>
+        </ul>
+        <p>Uw privacy is belangrijk voor ons.</p>
+
+        <h2>5. Technische Details</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Component</th>
+                    <th>Methode</th>
+                    <th>Cookies?</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>API Authenticatie</td>
+                    <td>X-API-Key header (stateless)</td>
+                    <td>Nee</td>
+                </tr>
+                <tr>
+                    <td>Sessie Management</td>
+                    <td>None (stateless API)</td>
+                    <td>Nee</td>
+                </tr>
+                <tr>
+                    <td>Client Storage</td>
+                    <td>LocalStorage (optional, client-side only)</td>
+                    <td>Nee</td>
+                </tr>
+                <tr>
+                    <td>Third-party Tracking</td>
+                    <td>None</td>
+                    <td>Nee</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2>6. Uw keuzes</h2>
+        <p>
+            Omdat wij geen cookies gebruiken, hoeft u niets te accepteren of weigeren.
+        </p>
+
+        <p><strong>Als u de web interface gebruikt:</strong></p>
+        <ul>
+            <li>LocalStorage kan verwijderd worden via browser instellingen</li>
+            <li>Geen impact op API functionaliteit</li>
+            <li>Data wordt niet gedeeld met derden</li>
+        </ul>
+
+        <h2>7. Wijzigingen in dit beleid</h2>
+        <p><strong>Als wij in de toekomst cookies gaan gebruiken:</strong></p>
+        <ul>
+            <li>Informeren wij u vooraf</li>
+            <li>Vragen wij expliciete toestemming</li>
+            <li>Updaten wij deze Cookie Policy</li>
+        </ul>
+        <p>Laatste update: 15 januari 2024</p>
+
+        <h2>8. Contact</h2>
+        <p>
+            Vragen over dit cookie beleid?<br>
+            E-mail: <a href="mailto:privacy@bookstore@ehb.be">privacy@bookstore@ehb.be</a>
+        </p>
+
+        <a href="/" class="back-link">Terug naar Beheerpagina</a>
+    </div>
+</body>
+</html>

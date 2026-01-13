@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Privacy Policy - Bookstore</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 32px;
+        }
+
+        .meta {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #eee;
+        }
+
+        h2 {
+            color: #333;
+            margin: 30px 0 15px 0;
+            font-size: 24px;
+        }
+
+        p {
+            margin-bottom: 15px;
+            color: #555;
+        }
+
+        ul {
+            margin: 15px 0 15px 30px;
+            color: #555;
+        }
+
+        li {
+            margin-bottom: 8px;
+        }
+
+        .highlight {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 20px 0;
+        }
+
+        .contact {
+            background: #e7f3ff;
+            border-left: 4px solid #007bff;
+            padding: 20px;
+            margin: 30px 0;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 30px;
+            color: #007bff;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+
+        code {
+            background: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Privacy Policy</h1>
+        <div class="meta">
+            <strong>Laatste update:</strong> 15 januari 2024<br>
+            <strong>Versie:</strong> 1.0<br>
+            <strong>Taal:</strong> Nederlands
+        </div>
+
+        <div class="highlight">
+            <strong>Samenvatting:</strong> Wij verzamelen alleen noodzakelijke gegevens voor orderverwerking. 
+            U heeft volledige controle over uw data via onze API endpoints. Wij voldoen aan de AVG/GDPR.
+        </div>
+
+        <h2>1. Wie zijn wij?</h2>
+        <p>
+            Bookstore API is een systeem voor het beheren van boekverkoop orders. 
+            Wij verzamelen en verwerken persoonsgegevens uitsluitend voor het uitvoeren van bestellingen 
+            en klantenadministratie.
+        </p>
+
+        <h2>2. Welke gegevens verzamelen wij?</h2>
+        <p><strong>Wij verzamelen de volgende persoonsgegevens:</strong></p>
+        <ul>
+            <li>Naam (verplicht voor orderverwerking)</li>
+            <li>E-mailadres (verplicht voor communicatie)</li>
+            <li>Telefoonnummer (optioneel voor contact)</li>
+            <li>Adres (verplicht voor levering)</li>
+            <li>Ordergeschiedenis</li>
+        </ul>
+
+        <p><strong>Wij verzamelen GEEN:</strong></p>
+        <ul>
+            <li>Geboortedatum</li>
+            <li>Burgerservicenummer (BSN)</li>
+            <li>Financiële gegevens (creditcards)</li>
+            <li>Gevoelige categorieën (gezondheid, religie, etc.)</li>
+        </ul>
+
+        <h2>3. Waarom verzamelen wij uw gegevens?</h2>
+        <p><strong>Rechtsgrondslag voor verwerking:</strong></p>
+        <ul>
+            <li>Uitvoering van overeenkomst (Art. 6.1.b GDPR) - Orders verwerken</li>
+            <li>Toestemming (Art. 6.1.a GDPR) - Via API call</li>
+            <li>Gerechtvaardigd belang (Art. 6.1.f GDPR) - Fraudepreventie</li>
+        </ul>
+
+        <p><strong>Doeleinden:</strong></p>
+        <ul>
+            <li>Orderverwerking</li>
+            <li>Klantenadministratie</li>
+            <li>Communicatie over uw bestelling</li>
+            <li>Wettelijke verplichtingen (fiscaal)</li>
+        </ul>
+
+        <h2>4. Hoe lang bewaren wij uw gegevens?</h2>
+        <ul>
+            <li>Ordergegevens: 7 jaar (fiscale verplichting)</li>
+            <li>Klantgegevens: Tot verwijderingsverzoek</li>
+            <li>Backups: 30 dagen</li>
+            <li>Logs: 7 dagen</li>
+        </ul>
+        <p>Na deze termijn worden gegevens permanent verwijderd.</p>
+
+        <h2>5. Met wie delen wij uw gegevens?</h2>
+        <p><strong>Ontvangers van uw gegevens:</strong></p>
+        <ul>
+            <li>Salesforce (CRM) - Klantbeheer</li>
+            <li>SAP R/3 (ERP) - Orderverwerking</li>
+            <li>RabbitMQ (Queue) - Interne message broker</li>
+        </ul>
+
+        <p><strong>Wij geven uw gegevens NIET door aan:</strong></p>
+        <ul>
+            <li>Marketingbedrijven</li>
+            <li>Social media platforms</li>
+            <li>Derde partijen zonder toestemming</li>
+        </ul>
+
+        <p><strong>Doorgifte buiten EU:</strong> Nee (alle data binnen EU)</p>
+
+        <h2>6. Uw rechten onder de AVG/GDPR</h2>
+        <p>U heeft de volgende rechten:</p>
+
+        <p><strong>1. Recht op inzage (Art. 15)</strong><br>
+        <code>GET /api/klanten/{id}</code></p>
+
+        <p><strong>2. Recht op correctie (Art. 16)</strong><br>
+        <code>PUT /api/klanten/{id}</code></p>
+
+        <p><strong>3. Recht op verwijdering (Art. 17)</strong><br>
+        <code>DELETE /api/klanten/{id}</code></p>
+
+        <p><strong>4. Recht op dataportabiliteit (Art. 20)</strong><br>
+        <code>GET /api/klanten/{id}/export</code></p>
+
+        <p><strong>5. Recht op beperking verwerking (Art. 18)</strong><br>
+        Contact: <a href="mailto:privacy@bookstore.com">privacy@bookstore.com</a></p>
+
+        <p><strong>6. Recht van bezwaar (Art. 21)</strong><br>
+        Contact: <a href="mailto:privacy@bookstore.com">privacy@bookstore.com</a></p>
+
+        <p>Verzoeken behandelen wij binnen 1 maand.</p>
+
+        <h2>7. Beveiliging van uw gegevens</h2>
+        <p><strong>Beveiligingsmaatregelen:</strong></p>
+        <ul>
+            <li>API Key authenticatie (X-API-Key header)</li>
+            <li>HTTPS encryptie (TLS 1.2+)</li>
+            <li>Input validatie tegen SQL injection en XSS</li>
+            <li>Audit logging van alle acties</li>
+            <li>Dagelijkse backups (encrypted)</li>
+            <li>Access control (alleen geautoriseerd personeel)</li>
+        </ul>
+        <p>Bij een datalek informeren wij u binnen 72 uur conform GDPR.</p>
+
+        <h2>8. Cookies en tracking</h2>
+        <p><strong>Deze API gebruikt:</strong></p>
+        <ul>
+            <li>Geen cookies (API-only, geen webinterface sessies)</li>
+            <li>Geen tracking pixels</li>
+            <li>Geen third-party analytics</li>
+        </ul>
+        <p>Zie <a href="/cookie-policy.html">Cookie Policy</a> voor meer details.</p>
+
+        <div class="contact">
+            <h2>Contact & Klachten</h2>
+            <p><strong>Vragen of klachten over privacy?</strong></p>
+            <p>
+                E-mail: <a href="mailto:privacy@bookstore@ehb.be">privacy@bookstore@ehb.be</a><br>
+                Data Protection Officer: <a href="mailto:dpo@bookstore@ehb.be">dpo@bookstore@ehb.be</a>
+            </p>
+
+            <p><strong>Klacht indienen bij toezichthouder:</strong></p>
+            <p>
+                Gegevensbeschermingsautoriteit (GBA)<br>
+                Drukpersstraat 35<br>
+                1000 Brussel<br>
+                Website: <a href="https://www.gegevensbeschermingsautoriteit.be" target="_blank">gegevensbeschermingsautoriteit.be</a>
+            </p>
+        </div>
+
+        <h2>9. Wijzigingen in deze policy</h2>
+        <p>
+            Wij kunnen deze privacy policy aanpassen. De laatste versie vindt u altijd op deze pagina.
+            Belangrijke wijzigingen communiceren wij via e-mail.
+        </p>
+        <p>Check regelmatig deze pagina voor updates.</p>
+
+        <a href="/" class="back-link">Terug naar Beheerpagina</a>
+    </div>
+</body>
+</html>
