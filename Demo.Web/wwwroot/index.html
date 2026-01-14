@@ -1,0 +1,969 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bookstore Management - Modern Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #667eea;
+            --primary-dark: #5568d3;
+            --secondary: #764ba2;
+            --success: #48bb78;
+            --danger: #f56565;
+            --warning: #ed8936;
+            --info: #4299e1;
+            --dark: #2d3748;
+            --light: #f7fafc;
+            --gray: #718096;
+            --border: #e2e8f0;
+            --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: var(--dark);
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        .header {
+            background: white;
+            padding: 25px 35px;
+            border-radius: 16px;
+            box-shadow: var(--shadow-lg);
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+        }
+
+        h1 {
+            font-size: 28px;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header-stats {
+            display: flex;
+            gap: 20px;
+        }
+
+        .stat-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: var(--light);
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .stat-badge i {
+            color: var(--primary);
+        }
+
+        /* Info Banner */
+        .info-banner {
+            background: linear-gradient(135deg, #4299e1, #667eea);
+            color: white;
+            padding: 20px 30px;
+            border-radius: 16px;
+            margin-bottom: 30px;
+            box-shadow: var(--shadow);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .info-banner i {
+            font-size: 24px;
+            opacity: 0.9;
+        }
+
+        .info-banner-content h3 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .info-banner-content p {
+            font-size: 14px;
+            opacity: 0.95;
+            line-height: 1.5;
+        }
+
+        /* Message Container */
+        #message-container {
+            margin-bottom: 20px;
+        }
+
+        /* Card Sections */
+        .card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: var(--shadow);
+            margin-bottom: 30px;
+            overflow: hidden;
+        }
+
+        .card-header {
+            padding: 25px 30px;
+            border-bottom: 2px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--dark);
+        }
+
+        .card-title i {
+            color: var(--primary);
+            font-size: 24px;
+        }
+
+        .card-body {
+            padding: 30px;
+        }
+
+        /* Search Bar */
+        .search-container {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 12px 20px;
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .search-results {
+            color: var(--gray);
+            font-size: 13px;
+            margin: 10px 0;
+            padding: 10px;
+            background: var(--light);
+            border-radius: 8px;
+        }
+
+        /* Table */
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+        thead {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+        }
+
+        th {
+            padding: 16px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        th:first-child {
+            border-top-left-radius: 10px;
+        }
+
+        th:last-child {
+            border-top-right-radius: 10px;
+        }
+
+        td {
+            padding: 16px;
+            font-size: 14px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        tbody tr {
+            transition: all 0.2s;
+        }
+
+        tbody tr:hover {
+            background: var(--light);
+            transform: translateX(2px);
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, var(--success), #38a169);
+            color: white;
+        }
+
+        .btn-bewerken {
+            background: linear-gradient(135deg, var(--warning), #dd6b20);
+            color: white;
+        }
+
+        .btn-verwijderen {
+            background: linear-gradient(135deg, var(--danger), #e53e3e);
+            color: white;
+        }
+
+        .btn-search {
+            background: linear-gradient(135deg, var(--info), #3182ce);
+            color: white;
+        }
+
+        .btn-clear {
+            background: var(--gray);
+            color: white;
+        }
+
+        .btn-icon {
+            padding: 8px 12px;
+            margin-right: 5px;
+        }
+
+        /* Forms */
+        .form-section {
+            background: white;
+            padding: 30px;
+            border-radius: 16px;
+            margin-bottom: 30px;
+            box-shadow: var(--shadow);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--dark);
+            font-size: 14px;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .order-form {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        /* Shopping Cart */
+        #winkelmandje {
+            background: white;
+            padding: 25px;
+            border-radius: 16px;
+            border: 3px solid var(--primary);
+            margin-top: 20px;
+            box-shadow: var(--shadow);
+        }
+
+        #winkelmandje h3 {
+            color: var(--primary);
+            margin-bottom: 15px;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .cart-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background: var(--light);
+            margin-bottom: 12px;
+            border-radius: 12px;
+            border: 2px solid var(--border);
+            transition: all 0.2s;
+        }
+
+        .cart-item:hover {
+            border-color: var(--primary);
+            transform: translateX(4px);
+        }
+
+        .cart-items {
+            margin-top: 15px;
+        }
+
+        .totaal-bedrag {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--success);
+            text-align: right;
+            margin-top: 20px;
+            padding: 15px;
+            background: linear-gradient(135deg, #f0fff4, #c6f6d5);
+            border-radius: 12px;
+        }
+
+        /* Status Badges */
+        .status-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-nieuw {
+            background: linear-gradient(135deg, #bee3f8, #90cdf4);
+            color: #2c5282;
+        }
+
+        .status-verwerkt {
+            background: linear-gradient(135deg, #c6f6d5, #9ae6b4);
+            color: #22543d;
+        }
+
+        .voorraad-info {
+            font-size: 12px;
+            color: var(--gray);
+            font-style: italic;
+        }
+
+        .voorraad-laag {
+            color: var(--danger);
+            font-weight: 700;
+        }
+
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: var(--gray);
+            font-size: 16px;
+        }
+
+        .loading::after {
+            content: '...';
+            animation: loading 1.5s infinite;
+        }
+
+        @keyframes loading {
+            0%, 20% { content: '.'; }
+            40% { content: '..'; }
+            60%, 100% { content: '...'; }
+        }
+
+        /* Messages */
+        .error {
+            background: linear-gradient(135deg, #fed7d7, #feb2b2);
+            color: #742a2a;
+            padding: 16px 20px;
+            border-radius: 12px;
+            margin: 15px 0;
+            border-left: 4px solid var(--danger);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .success {
+            background: linear-gradient(135deg, #c6f6d5, #9ae6b4);
+            color: #22543d;
+            padding: 16px 20px;
+            border-radius: 12px;
+            margin: 15px 0;
+            border-left: 4px solid var(--success);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 1000;
+            backdrop-filter: blur(4px);
+            animation: fadeIn 0.3s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            background: white;
+            margin: 50px auto;
+            padding: 35px;
+            width: 90%;
+            max-width: 600px;
+            border-radius: 20px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: var(--shadow-lg);
+            animation: slideUp 0.3s;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .close {
+            float: right;
+            font-size: 32px;
+            font-weight: 700;
+            cursor: pointer;
+            color: var(--gray);
+            transition: all 0.2s;
+            line-height: 1;
+        }
+
+        .close:hover {
+            color: var(--danger);
+            transform: rotate(90deg);
+        }
+
+        .modal-content h2 {
+            color: var(--primary);
+            margin-bottom: 25px;
+            font-size: 24px;
+        }
+
+        /* Footer */
+        footer {
+            margin-top: 50px;
+            padding: 30px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 16px;
+            text-align: center;
+            color: var(--gray);
+            font-size: 14px;
+            box-shadow: var(--shadow);
+        }
+
+        footer a {
+            color: var(--primary);
+            text-decoration: none;
+            margin: 0 10px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        footer a:hover {
+            color: var(--secondary);
+            text-decoration: underline;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .header-stats {
+                width: 100%;
+                justify-content: center;
+                flex-wrap: wrap;
+            }
+
+            .order-form {
+                grid-template-columns: 1fr;
+            }
+
+            .search-container {
+                flex-direction: column;
+            }
+
+            table {
+                font-size: 12px;
+            }
+
+            th, td {
+                padding: 10px 8px;
+            }
+        }
+
+        /* Animations */
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        /* Number Input */
+        .aantal-selector {
+            width: 100px;
+            margin-left: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header fade-in">
+            <div class="header-left">
+                <div class="logo">
+                    <i class="fas fa-book"></i>
+                </div>
+                <div>
+                    <h1>Bookstore Management</h1>
+                    <p style="color: var(--gray); font-size: 14px; margin-top: 5px;">
+                        <i class="fas fa-mobile-alt"></i> Smartphone-ready verkoopdashboard
+                    </p>
+                </div>
+            </div>
+            <div class="header-stats">
+                <div class="stat-badge">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span id="stat-orders">0 Orders</span>
+                </div>
+                <div class="stat-badge">
+                    <i class="fas fa-users"></i>
+                    <span id="stat-klanten">0 Klanten</span>
+                </div>
+                <div class="stat-badge">
+                    <i class="fas fa-book-open"></i>
+                    <span id="stat-boeken">0 Boeken</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Info Banner -->
+        <div class="info-banner fade-in">
+            <i class="fas fa-info-circle"></i>
+            <div class="info-banner-content">
+                <h3><i class="fas fa-bullseye"></i> Doel van dit Dashboard</h3>
+                <p>Als verkoper kun je hier snel orders plaatsen voor klanten. Alle gegevens worden via RabbitMQ naar Salesforce en via SAP iDoc naar SAP R/3 gestuurd. Beheer klanten, boeken en bekijk alle bestellingen op een centrale plek.</p>
+            </div>
+        </div>
+
+        <div id="message-container"></div>
+
+        <!-- Bestellingen Sectie -->
+        <section id="bestellingen-sectie" class="card fade-in">
+            <div class="card-header">
+                <div class="card-title">
+                    <i class="fas fa-clipboard-list"></i>
+                    Bestellingen
+                </div>
+            </div>
+            <div class="card-body">
+                <div id="bestellingen-loading" class="loading">
+                    <i class="fas fa-spinner fa-spin"></i> Bestellingen laden
+                </div>
+                <table id="bestellingen-tabel" style="display:none;">
+                    <thead>
+                        <tr>
+                            <th><i class="fas fa-hashtag"></i> ID</th>
+                            <th><i class="fas fa-user"></i> Klant</th>
+                            <th><i class="fas fa-book"></i> Boek(en)</th>
+                            <th><i class="fas fa-calendar"></i> Datum</th>
+                            <th><i class="fas fa-euro-sign"></i> Totaal</th>
+                            <th><i class="fas fa-cog"></i> Acties</th>
+                        </tr>
+                    </thead>
+                    <tbody id="bestellingen-body">
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Klantenbeheer Sectie -->
+        <section id="klanten-sectie" class="card fade-in">
+            <div class="card-header">
+                <div class="card-title">
+                    <i class="fas fa-users"></i>
+                    Klantenbeheer
+                </div>
+                <button class="btn btn-success" onclick="openNieuweKlantModal()">
+                    <i class="fas fa-plus"></i> Nieuwe Klant
+                </button>
+            </div>
+            <div class="card-body">
+                <!-- Zoekbalk -->
+                <div class="search-container">
+                    <input type="text" id="klanten-search-input" class="search-input" placeholder="Zoek op naam, email of telefoon...">
+                    <button class="btn btn-search" onclick="searchKlanten()">
+                        <i class="fas fa-search"></i> Zoeken
+                    </button>
+                    <button class="btn btn-clear" onclick="clearKlantenSearch()">
+                        <i class="fas fa-times"></i> Reset
+                    </button>
+                </div>
+                <div id="klanten-search-results" class="search-results"></div>
+                
+                <div id="klanten-loading" class="loading">
+                    <i class="fas fa-spinner fa-spin"></i> Klanten laden
+                </div>
+                <table id="klanten-tabel" style="display:none;">
+                    <thead>
+                        <tr>
+                            <th><i class="fas fa-user"></i> Naam</th>
+                            <th><i class="fas fa-envelope"></i> Email</th>
+                            <th><i class="fas fa-phone"></i> Telefoon</th>
+                            <th><i class="fas fa-cog"></i> Acties</th>
+                        </tr>
+                    </thead>
+                    <tbody id="klanten-body">
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Klant Details Sectie -->
+        <section id="klant-details-sectie" class="form-section fade-in">
+            <h2 style="margin-bottom: 10px; display: flex; align-items: center; gap: 10px;">
+                <i class="fas fa-user-edit"></i> Klant Details
+            </h2>
+            <p style="color: var(--gray); margin-bottom: 20px; font-size: 14px;">
+                <i class="fas fa-info-circle"></i> Gebruik dit formulier om een nieuwe klant toe te voegen of bestaande klant aan te passen.
+            </p>
+            <form id="klant-form">
+                <input type="hidden" id="klant-id">
+                <div class="form-group">
+                    <label><i class="fas fa-user"></i> Naam</label>
+                    <input type="text" id="klant-naam" placeholder="Voer klantnaam in" required>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-envelope"></i> Email</label>
+                    <input type="email" id="klant-email" placeholder="Voer klantemail in" required>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-phone"></i> Telefoon</label>
+                    <input type="text" id="klant-telefoon" placeholder="Voer telefoonnummer in" required>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-map-marker-alt"></i> Adres</label>
+                    <input type="text" id="klant-adres" placeholder="Voer adres in" required>
+                </div>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i> Opslaan
+                </button>
+                <button type="button" class="btn btn-clear" onclick="resetKlantForm()">
+                    <i class="fas fa-redo"></i> Nieuwe klant
+                </button>
+            </form>
+        </section>
+
+        <!-- Boeken Sectie -->
+        <section id="boeken-sectie" class="card fade-in">
+            <div class="card-header">
+                <div class="card-title">
+                    <i class="fas fa-book-open"></i>
+                    Boeken
+                </div>
+                <button class="btn btn-success" onclick="openNieuwBoekModal()">
+                    <i class="fas fa-plus"></i> Nieuw Boek
+                </button>
+            </div>
+            <div class="card-body">
+                <!-- Zoekbalk -->
+                <div class="search-container">
+                    <input type="text" id="boeken-search-input" class="search-input" placeholder="Zoek op titel, auteur of ISBN...">
+                    <button class="btn btn-search" onclick="searchBoeken()">
+                        <i class="fas fa-search"></i> Zoeken
+                    </button>
+                    <button class="btn btn-clear" onclick="clearBoekenSearch()">
+                        <i class="fas fa-times"></i> Reset
+                    </button>
+                </div>
+                <div id="boeken-search-results" class="search-results"></div>
+                
+                <div id="boeken-loading" class="loading">
+                    <i class="fas fa-spinner fa-spin"></i> Boeken laden
+                </div>
+                <table id="boeken-tabel" style="display:none;">
+                    <thead>
+                        <tr>
+                            <th><i class="fas fa-book"></i> Titel</th>
+                            <th><i class="fas fa-pen"></i> Auteur</th>
+                            <th><i class="fas fa-euro-sign"></i> Prijs</th>
+                            <th><i class="fas fa-boxes"></i> Voorraad</th>
+                            <th><i class="fas fa-barcode"></i> ISBN</th>
+                            <th><i class="fas fa-cog"></i> Acties</th>
+                        </tr>
+                    </thead>
+                    <tbody id="boeken-body">
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Bestel een boek Sectie -->
+        <section id="order-sectie" class="form-section fade-in">
+            <h2 style="margin-bottom: 10px; display: flex; align-items: center; gap: 10px;">
+                <i class="fas fa-shopping-cart"></i> Bestel een boek
+            </h2>
+            <p style="color: var(--gray); margin-bottom: 20px; font-size: 14px;">
+                <i class="fas fa-info-circle"></i> Selecteer klant en boek(en), voeg toe aan winkelmandje en plaats de bestelling.
+            </p>
+            <div class="order-form">
+                <div class="form-group">
+                    <label><i class="fas fa-user"></i> Klant</label>
+                    <select id="order-klant" required>
+                        <option value="">Selecteer een klant</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-book"></i> Boek</label>
+                    <select id="order-boek" required>
+                        <option value="">Selecteer een boek</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
+                <label><i class="fas fa-calculator"></i> Aantal</label>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <input type="number" id="order-aantal" value="1" min="1" class="aantal-selector">
+                    <button type="button" class="btn btn-primary" onclick="toevoegenAanWinkelmandje()">
+                        <i class="fas fa-cart-plus"></i> Toevoegen aan winkelmandje
+                    </button>
+                </div>
+            </div>
+
+            <div id="winkelmandje">
+                <h3><i class="fas fa-shopping-basket"></i> Winkelmandje</h3>
+                <div id="winkelmandje-items" class="cart-items">
+                    <p style="color: #999; text-align: center; padding: 20px;">
+                        <i class="fas fa-shopping-cart" style="font-size: 24px; opacity: 0.5; display: block; margin-bottom: 10px;"></i>
+                        Geen items in winkelmandje
+                    </p>
+                </div>
+                <div class="totaal-bedrag" id="totaal-bedrag">
+                    <i class="fas fa-euro-sign"></i> Totaal: EUR 0.00
+                </div>
+                <button type="button" class="btn btn-success" onclick="plaatsOrder()" style="width: 100%; margin-top: 10px; font-size: 16px; padding: 14px;">
+                    <i class="fas fa-check-circle"></i> Bestelling Plaatsen
+                </button>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="fade-in">
+            <p style="font-weight: 600; margin-bottom: 10px;">
+                <i class="fas fa-book-reader"></i> &copy; 2024 Bookstore - Alle rechten voorbehouden
+            </p>
+            <p>
+                <a href="/privacy-policy.html" target="_blank"><i class="fas fa-shield-alt"></i> Privacy Policy</a> |
+                <a href="/cookie-policy.html" target="_blank"><i class="fas fa-cookie-bite"></i> Cookie Policy</a> |
+                <a href="/terms-of-service.html" target="_blank"><i class="fas fa-file-contract"></i> Gebruiksvoorwaarden</a> |
+                <a href="/swagger" target="_blank"><i class="fas fa-code"></i> API Documentatie</a>
+            </p>
+            <p style="margin-top: 15px; font-size: 13px; color: var(--gray);">
+                <i class="fas fa-envelope"></i> Contact: <a href="mailto:support@bookstore@ehb.be">support@bookstore@ehb.be</a> | 
+                <i class="fas fa-map-marker-alt"></i> Nijverheidskaai 170, 1070 Brussel
+            </p>
+            <p style="margin-top: 10px; font-size: 12px; opacity: 0.7;">
+                <i class="fas fa-cogs"></i> Powered by RabbitMQ + Salesforce + SAP R/3
+            </p>
+        </footer>
+    </div>
+
+    <!-- Modals -->
+    <div id="klant-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeKlantModal()">&times;</span>
+            <h2 id="klant-modal-title"><i class="fas fa-user-edit"></i> Klant Bewerken</h2>
+            <form id="klant-modal-form">
+                <input type="hidden" id="modal-klant-id">
+                <div class="form-group">
+                    <label><i class="fas fa-user"></i> Naam</label>
+                    <input type="text" id="modal-klant-naam" required>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-envelope"></i> Email</label>
+                    <input type="email" id="modal-klant-email" required>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-phone"></i> Telefoon</label>
+                    <input type="text" id="modal-klant-telefoon" required>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-map-marker-alt"></i> Adres</label>
+                    <input type="text" id="modal-klant-adres" required>
+                </div>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i> Opslaan
+                </button>
+                <button type="button" class="btn btn-clear" onclick="closeKlantModal()">
+                    <i class="fas fa-times"></i> Annuleren
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div id="boek-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeBoekModal()">&times;</span>
+            <h2 id="boek-modal-title"><i class="fas fa-book"></i> Boek Bewerken</h2>
+            <form id="boek-modal-form">
+                <input type="hidden" id="modal-boek-id">
+                <div class="form-group">
+                    <label><i class="fas fa-book"></i> Titel</label>
+                    <input type="text" id="modal-boek-titel" required>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-pen"></i> Auteur</label>
+                    <input type="text" id="modal-boek-auteur" required>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-euro-sign"></i> Prijs (EUR)</label>
+                    <input type="number" step="0.01" id="modal-boek-prijs" required>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-boxes"></i> Voorraad Aantal</label>
+                    <input type="number" id="modal-boek-voorraad" required>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-barcode"></i> ISBN</label>
+                    <input type="text" id="modal-boek-isbn" required>
+                </div>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i> Opslaan
+                </button>
+                <button type="button" class="btn btn-clear" onclick="closeBoekModal()">
+                    <i class="fas fa-times"></i> Annuleren
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div id="order-details-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeOrderDetailsModal()">&times;</span>
+            <h2><i class="fas fa-receipt"></i> Bestelling Details</h2>
+            <div id="order-details-content"></div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+    <script src="search-functions.js"></script>
+    <script>
+        // Update stats in header
+        function updateHeaderStats() {
+            setTimeout(() => {
+                const orders = document.querySelectorAll('#bestellingen-body tr').length;
+                const klanten = document.querySelectorAll('#klanten-body tr').length;
+                const boeken = document.querySelectorAll('#boeken-body tr').length;
+                
+                document.getElementById('stat-orders').textContent = `${orders} Orders`;
+                document.getElementById('stat-klanten').textContent = `${klanten} Klanten`;
+                document.getElementById('stat-boeken').textContent = `${boeken} Boeken`;
+            }, 500);
+        }
+        
+        // Monitor data changes
+        if (typeof MutationObserver !== 'undefined') {
+            const observer = new MutationObserver(updateHeaderStats);
+            const config = { childList: true, subtree: true };
+            
+            setTimeout(() => {
+                ['bestellingen-body', 'klanten-body', 'boeken-body'].forEach(id => {
+                    const element = document.getElementById(id);
+                    if (element) observer.observe(element, config);
+                });
+            }, 1000);
+        }
+    </script>
+</body>
+</html>
