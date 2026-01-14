@@ -3,6 +3,9 @@ using Demo.Web.Models;
 
 namespace Demo.Web.Validators;
 
+/// <summary>
+/// Validator voor OrderMessage - valideert orders voordat ze naar RabbitMQ gaan
+/// </summary>
 public class OrderMessageValidator : AbstractValidator<OrderMessage>
 {
     public OrderMessageValidator()
@@ -37,6 +40,9 @@ public class OrderMessageValidator : AbstractValidator<OrderMessage>
     }
 }
 
+/// <summary>
+/// Validator voor individuele order items
+/// </summary>
 public class OrderItemMessageValidator : AbstractValidator<OrderItemMessage>
 {
     public OrderItemMessageValidator()
@@ -52,54 +58,5 @@ public class OrderItemMessageValidator : AbstractValidator<OrderItemMessage>
         RuleFor(x => x.Prijs)
             .GreaterThan(0).WithMessage("Prijs moet groter dan 0 zijn")
             .LessThan(10000).WithMessage("Prijs mag niet hoger zijn dan €10.000 per item");
-    }
-}
-
-public class EntityChangeMessageValidator : AbstractValidator<EntityChangeMessage>
-{
-    public EntityChangeMessageValidator()
-    {
-        RuleFor(x => x.EntityType)
-            .IsInEnum().WithMessage("Ongeldig EntityType");
-
-        RuleFor(x => x.Action)
-            .IsInEnum().WithMessage("Ongeldig ActionType");
-
-        RuleFor(x => x.EntityId)
-            .GreaterThan(0).WithMessage("EntityId moet groter dan 0 zijn");
-
-        RuleFor(x => x.EntityName)
-            .NotEmpty().WithMessage("EntityName is verplicht")
-            .MaximumLength(200).WithMessage("EntityName mag maximaal 200 karakters zijn");
-
-        RuleFor(x => x.Timestamp)
-            .NotEmpty().WithMessage("Timestamp is verplicht")
-            .LessThanOrEqualTo(DateTime.UtcNow.AddMinutes(5))
-                .WithMessage("Timestamp kan niet in de toekomst liggen");
-    }
-}
-
-public class KlantDeletedMessageValidator : AbstractValidator<KlantDeletedMessage>
-{
-    public KlantDeletedMessageValidator()
-    {
-        RuleFor(x => x.KlantId)
-            .GreaterThan(0).WithMessage("KlantId moet groter dan 0 zijn");
-
-        RuleFor(x => x.KlantNaam)
-            .NotEmpty().WithMessage("KlantNaam is verplicht");
-
-        RuleFor(x => x.Email)
-            .NotEmpty().WithMessage("Email is verplicht")
-            .EmailAddress().WithMessage("Ongeldig email formaat");
-
-        RuleFor(x => x.DeletedAt)
-            .NotEmpty().WithMessage("DeletedAt is verplicht")
-            .LessThanOrEqualTo(DateTime.UtcNow.AddMinutes(5))
-                .WithMessage("DeletedAt kan niet in de toekomst liggen");
-
-        RuleFor(x => x.Reason)
-            .NotEmpty().WithMessage("Reason is verplicht")
-            .MaximumLength(500).WithMessage("Reason mag maximaal 500 karakters zijn");
     }
 }

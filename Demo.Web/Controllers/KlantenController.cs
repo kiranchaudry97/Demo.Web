@@ -13,7 +13,6 @@ public class KlantenController : ControllerBase
 {
     private readonly AppDbContext _context;
     private readonly IRabbitMqService _rabbitMqService;
-    private readonly IRabbitMqAdvancedService _rabbitMqAdvancedService;
     private readonly IEncryptionService _encryptionService;
     private readonly IMessageValidationService _validationService;
     private readonly ILogger<KlantenController> _logger;
@@ -21,14 +20,12 @@ public class KlantenController : ControllerBase
     public KlantenController(
         AppDbContext context, 
         IRabbitMqService rabbitMqService,
-        IRabbitMqAdvancedService rabbitMqAdvancedService,
         IEncryptionService encryptionService,
         IMessageValidationService validationService,
         ILogger<KlantenController> logger)
     {
         _context = context;
         _rabbitMqService = rabbitMqService;
-        _rabbitMqAdvancedService = rabbitMqAdvancedService;
         _encryptionService = encryptionService;
         _validationService = validationService;
         _logger = logger;
@@ -128,29 +125,7 @@ public class KlantenController : ControllerBase
         _context.Klanten.Add(klant);
         await _context.SaveChangesAsync();
 
-        _logger.LogInformation($"?? Klant aangemaakt met encrypted PII: {klant.Naam} (ID: {klant.Id})");
-
-        // ?? Publish entity created event to RabbitMQ (Advanced Pattern)
-        var entityChange = new EntityChangeMessage
-        {
-            EntityType = EntityType.Klant,
-            Action = ActionType.Created,
-            EntityId = klant.Id,
-            EntityName = klant.Naam,
-            Timestamp = DateTime.UtcNow,
-            Data = new Dictionary<string, object>
-            {
-                { "email", klantDto.Email }, // Use decrypted for messaging
-                { "telefoon", klantDto.Telefoon }
-            }
-        };
-
-        // Validate and publish
-        var (isValid, errors) = await _validationService.ValidateAndLogAsync(entityChange, "EntityChangeMessage");
-        if (isValid)
-        {
-            await _rabbitMqAdvancedService.PublishEntityEventAsync("klant", "created", entityChange);
-        }
+        _logger.LogInformation($"? Klant aangemaakt met encrypted PII: {klant.Naam} (ID: {klant.Id})");
 
         klantDto.Id = klant.Id;
         return CreatedAtAction(nameof(GetKlant), new { id = klant.Id }, klantDto);
@@ -174,28 +149,7 @@ public class KlantenController : ControllerBase
 
         await _context.SaveChangesAsync();
 
-        _logger.LogInformation($"?? Klant bijgewerkt met encrypted PII: {klant.Naam} (ID: {klant.Id})");
-
-        // ?? Publish entity updated event
-        var entityChange = new EntityChangeMessage
-        {
-            EntityType = EntityType.Klant,
-            Action = ActionType.Updated,
-            EntityId = klant.Id,
-            EntityName = klant.Naam,
-            Timestamp = DateTime.UtcNow,
-            Data = new Dictionary<string, object>
-            {
-                { "email", klantDto.Email },
-                { "telefoon", klantDto.Telefoon }
-            }
-        };
-
-        var (isValid, errors) = await _validationService.ValidateAndLogAsync(entityChange, "EntityChangeMessage");
-        if (isValid)
-        {
-            await _rabbitMqAdvancedService.PublishEntityEventAsync("klant", "updated", entityChange);
-        }
+        _logger.LogInformation($"? Klant bijgewerkt met encrypted PII: {klant.Naam} (ID: {klant.Id})");
 
         return NoContent();
     }
@@ -217,69 +171,13 @@ public class KlantenController : ControllerBase
             return BadRequest(new { error = "Kan klant niet verwijderen. Er zijn nog orders gekoppeld aan deze klant." });
         }
 
-        // ?? Decrypt data before creating delete message
-        var decryptedEmail = _encryptionService.Decrypt(klant.Email);
-        var decryptedTelefoon = _encryptionService.Decrypt(klant.Telefoon);
-
-        // Create delete message BEFORE deleting from database
-        var deleteMessage = new KlantDeletedMessage
-        {
-            KlantId = klant.Id,
-            KlantNaam = klant.Naam,
-            Email = decryptedEmail, // Use decrypted for messaging
-            DeletedAt = DateTime.UtcNow,
-            Reason = "User requested deletion via API"
-        };
-
-        // Also create entity change message
-        var entityChange = new EntityChangeMessage
-        {
-            EntityType = EntityType.Klant,
-            Action = ActionType.Deleted,
-            EntityId = klant.Id,
-            EntityName = klant.Naam,
-            Timestamp = DateTime.UtcNow,
-            Data = new Dictionary<string, object>
-            {
-                { "email", decryptedEmail },
-                { "telefoon", decryptedTelefoon }
-            }
-        };
-
-        // Validate messages before publishing
-        var (isValidDelete, deleteErrors) = await _validationService.ValidateAndLogAsync(deleteMessage, "KlantDeletedMessage");
-        var (isValidChange, changeErrors) = await _validationService.ValidateAndLogAsync(entityChange, "EntityChangeMessage");
-
         // Delete from database
         _context.Klanten.Remove(klant);
         await _context.SaveChangesAsync();
 
-        // ?? Publish to RabbitMQ using Advanced Patterns
-        _ = Task.Run(async () =>
-        {
-            try
-            {
-                if (isValidDelete)
-                {
-                    // Use topic exchange with routing key
-                    await _rabbitMqAdvancedService.PublishEntityEventAsync("klant", "deleted", deleteMessage);
-                }
-                
-                if (isValidChange)
-                {
-                    await _rabbitMqAdvancedService.PublishEntityEventAsync("klant", "deleted", entityChange);
-                }
-                
-                _logger.LogInformation($"? Klant delete events gepubliceerd naar RabbitMQ (Advanced): {klant.Naam} (ID: {klant.Id})");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"? Fout bij publiceren delete event naar RabbitMQ: {ex.Message}");
-            }
-        });
-
-        _logger.LogInformation($"Klant verwijderd: {klant.Naam} (ID: {klant.Id})");
+        _logger.LogInformation($"? Klant verwijderd: {klant.Naam} (ID: {klant.Id})");
 
         return NoContent();
     }
 }
+

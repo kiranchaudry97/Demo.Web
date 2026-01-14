@@ -4,7 +4,7 @@ public class ApiKeyMiddleware
 {
     private readonly RequestDelegate _next;
     private readonly IConfiguration _configuration;
-    private const string ApiKeyHeaderName = "X-API-Key";
+    private static readonly string[] ApiKeyHeaderNames = ["X-API-Key", "X-Api-Key", "X-APIKEY", "X-ApiKey", "ApiKey", "Api-Key"];
 
     public ApiKeyMiddleware(RequestDelegate next, IConfiguration configuration)
     {
@@ -26,7 +26,17 @@ public class ApiKeyMiddleware
             return;
         }
 
-        if (!context.Request.Headers.TryGetValue(ApiKeyHeaderName, out var extractedApiKey))
+        string? extractedApiKey = null;
+        foreach (var headerName in ApiKeyHeaderNames)
+        {
+            if (context.Request.Headers.TryGetValue(headerName, out var headerValue) && !string.IsNullOrWhiteSpace(headerValue))
+            {
+                extractedApiKey = headerValue.ToString();
+                break;
+            }
+        }
+
+        if (string.IsNullOrWhiteSpace(extractedApiKey))
         {
             context.Response.StatusCode = 401;
             await context.Response.WriteAsJsonAsync(new { error = "API Key ontbreekt" });
@@ -35,7 +45,7 @@ public class ApiKeyMiddleware
 
         var apiKey = _configuration["ApiKey"] ?? "demo-api-key-12345";
 
-        if (!apiKey.Equals(extractedApiKey))
+        if (!apiKey.Equals(extractedApiKey, StringComparison.Ordinal))
         {
             context.Response.StatusCode = 401;
             await context.Response.WriteAsJsonAsync(new { error = "Ongeldige API Key" });

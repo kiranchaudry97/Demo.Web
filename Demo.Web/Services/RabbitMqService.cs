@@ -1,4 +1,4 @@
-using RabbitMQ.Client;
+﻿using RabbitMQ.Client;
 using System.Text;
 using System.Text.Json;
 
@@ -21,30 +21,51 @@ public class RabbitMqService : IRabbitMqService, IDisposable
     {
         _logger = logger;
         
+        var hostname = configuration["RabbitMQ:HostName"] ?? "localhost";
+        var port = int.Parse(configuration["RabbitMQ:Port"] ?? "5672");
+        var username = configuration["RabbitMQ:UserName"] ?? "guest";
+        var password = configuration["RabbitMQ:Password"] ?? "guest";
+        
+        _logger.LogInformation($"🔌 Attempting RabbitMQ connection to {hostname}:{port} as user '{username}'");
+        
         var factory = new ConnectionFactory
         {
-            HostName = configuration["RabbitMQ:HostName"] ?? "localhost",
-            Port = int.Parse(configuration["RabbitMQ:Port"] ?? "5672"),
-            UserName = configuration["RabbitMQ:UserName"] ?? "guest",
-            Password = configuration["RabbitMQ:Password"] ?? "guest"
+            HostName = hostname,
+            Port = port,
+            UserName = username,
+            Password = password,
+            RequestedConnectionTimeout = TimeSpan.FromSeconds(10),
+            SocketReadTimeout = TimeSpan.FromSeconds(10),
+            SocketWriteTimeout = TimeSpan.FromSeconds(10)
         };
 
         try
         {
-            _connection = factory.CreateConnection();
+            _logger.LogInformation("🔄 Creating RabbitMQ connection...");
+            _connection = factory.CreateConnection("RabbitMqService-Producer");
+            
+            _logger.LogInformation("🔄 Creating RabbitMQ channel...");
             _channel = _connection.CreateModel();
             
+            _logger.LogInformation("🔄 Declaring queues...");
             // Declare multiple queues
             DeclareQueue(QueueName);
             DeclareQueue("entity_changes");
             DeclareQueue("klant_deleted");
             DeclareQueue("boek_deleted");
 
-            _logger.LogInformation("RabbitMQ verbinding succesvol - Alle queues aangemaakt");
+            _logger.LogInformation("✅ RabbitMQ verbinding succesvol - Alle queues aangemaakt");
+            _logger.LogInformation($"✅ Connection: {_connection.IsOpen}, Channel: {_channel.IsOpen}");
         }
         catch (Exception ex)
         {
-            _logger.LogWarning($"RabbitMQ verbinding mislukt: {ex.Message}. App draait in fallback modus.");
+            _logger.LogError(ex, $"❌ RabbitMQ verbinding mislukt!");
+            _logger.LogError($"❌ Error details: {ex.GetType().Name}: {ex.Message}");
+            if (ex.InnerException != null)
+            {
+                _logger.LogError($"❌ Inner exception: {ex.InnerException.Message}");
+            }
+            _logger.LogWarning("⚠️ App draait in fallback modus (zonder RabbitMQ)");
             _connection = null;
             _channel = null;
         }

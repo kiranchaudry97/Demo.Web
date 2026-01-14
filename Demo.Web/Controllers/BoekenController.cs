@@ -12,22 +12,13 @@ namespace Demo.Web.Controllers;
 public class BoekenController : ControllerBase
 {
     private readonly AppDbContext _context;
-    private readonly IRabbitMqService _rabbitMqService;
-    private readonly IRabbitMqAdvancedService _rabbitMqAdvancedService;
-    private readonly IMessageValidationService _validationService;
     private readonly ILogger<BoekenController> _logger;
 
     public BoekenController(
         AppDbContext context,
-        IRabbitMqService rabbitMqService,
-        IRabbitMqAdvancedService rabbitMqAdvancedService,
-        IMessageValidationService validationService,
         ILogger<BoekenController> logger)
     {
         _context = context;
-        _rabbitMqService = rabbitMqService;
-        _rabbitMqAdvancedService = rabbitMqAdvancedService;
-        _validationService = validationService;
         _logger = logger;
     }
 
@@ -136,31 +127,7 @@ public class BoekenController : ControllerBase
         _context.Boeken.Add(boek);
         await _context.SaveChangesAsync();
 
-        _logger.LogInformation($"Boek aangemaakt: {boek.Titel} (ID: {boek.Id})");
-
-        // ?? Publish entity created event to RabbitMQ (Advanced Pattern)
-        var entityChange = new EntityChangeMessage
-        {
-            EntityType = EntityType.Boek,
-            Action = ActionType.Created,
-            EntityId = boek.Id,
-            EntityName = boek.Titel,
-            Timestamp = DateTime.UtcNow,
-            Data = new Dictionary<string, object>
-            {
-                { "isbn", boek.ISBN },
-                { "auteur", boek.Auteur },
-                { "prijs", boek.Prijs },
-                { "voorraad", boek.VoorraadAantal }
-            }
-        };
-
-        // Validate and publish
-        var (isValid, errors) = await _validationService.ValidateAndLogAsync(entityChange, "EntityChangeMessage");
-        if (isValid)
-        {
-            await _rabbitMqAdvancedService.PublishEntityEventAsync("boek", "created", entityChange);
-        }
+        _logger.LogInformation($"? Boek aangemaakt: {boek.Titel} (ID: {boek.Id})");
 
         boekDto.Id = boek.Id;
         return CreatedAtAction(nameof(GetBoek), new { id = boek.Id }, boekDto);
@@ -184,30 +151,7 @@ public class BoekenController : ControllerBase
 
         await _context.SaveChangesAsync();
 
-        _logger.LogInformation($"Boek bijgewerkt: {boek.Titel} (ID: {boek.Id})");
-
-        // ?? Publish entity updated event
-        var entityChange = new EntityChangeMessage
-        {
-            EntityType = EntityType.Boek,
-            Action = ActionType.Updated,
-            EntityId = boek.Id,
-            EntityName = boek.Titel,
-            Timestamp = DateTime.UtcNow,
-            Data = new Dictionary<string, object>
-            {
-                { "isbn", boek.ISBN },
-                { "auteur", boek.Auteur },
-                { "prijs", boek.Prijs },
-                { "voorraad", boek.VoorraadAantal }
-            }
-        };
-
-        var (isValid, errors) = await _validationService.ValidateAndLogAsync(entityChange, "EntityChangeMessage");
-        if (isValid)
-        {
-            await _rabbitMqAdvancedService.PublishEntityEventAsync("boek", "updated", entityChange);
-        }
+        _logger.LogInformation($"? Boek bijgewerkt: {boek.Titel} (ID: {boek.Id})");
 
         return NoContent();
     }
@@ -229,62 +173,10 @@ public class BoekenController : ControllerBase
             return BadRequest(new { error = "Kan boek niet verwijderen. Het boek is gebruikt in bestellingen." });
         }
 
-        // Create delete message BEFORE deleting from database
-        var deleteMessage = new BoekDeletedMessage
-        {
-            BoekId = boek.Id,
-            Titel = boek.Titel,
-            ISBN = boek.ISBN,
-            LaatsteVoorraad = boek.VoorraadAantal,
-            DeletedAt = DateTime.UtcNow,
-            Reason = "User requested deletion via API"
-        };
-
-        // Also create entity change message
-        var entityChange = new EntityChangeMessage
-        {
-            EntityType = EntityType.Boek,
-            Action = ActionType.Deleted,
-            EntityId = boek.Id,
-            EntityName = boek.Titel,
-            Timestamp = DateTime.UtcNow,
-            Data = new Dictionary<string, object>
-            {
-                { "isbn", boek.ISBN },
-                { "auteur", boek.Auteur },
-                { "prijs", boek.Prijs },
-                { "voorraad", boek.VoorraadAantal }
-            }
-        };
-
-        // Validate messages before publishing
-        var (isValidChange, changeErrors) = await _validationService.ValidateAndLogAsync(entityChange, "EntityChangeMessage");
-
-        // Delete from database
         _context.Boeken.Remove(boek);
         await _context.SaveChangesAsync();
 
-        // ?? Publish to RabbitMQ using Advanced Patterns
-        _ = Task.Run(async () =>
-        {
-            try
-            {
-                if (isValidChange)
-                {
-                    // Use topic exchange with routing key
-                    await _rabbitMqAdvancedService.PublishEntityEventAsync("boek", "deleted", deleteMessage);
-                    await _rabbitMqAdvancedService.PublishEntityEventAsync("boek", "deleted", entityChange);
-                }
-                
-                _logger.LogInformation($"? Boek delete events gepubliceerd naar RabbitMQ (Advanced): {boek.Titel} (ID: {boek.Id})");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"? Fout bij publiceren delete event naar RabbitMQ: {ex.Message}");
-            }
-        });
-
-        _logger.LogInformation($"Boek verwijderd: {boek.Titel} (ID: {boek.Id})");
+        _logger.LogInformation($"? Boek verwijderd: {boek.Titel} (ID: {boek.Id})");
 
         return NoContent();
     }

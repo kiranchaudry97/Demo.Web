@@ -13,7 +13,6 @@ public class OrdersController : ControllerBase
 {
     private readonly AppDbContext _context;
     private readonly IRabbitMqService _rabbitMqService;
-    private readonly IRabbitMqAdvancedService _rabbitMqAdvancedService;
     private readonly IMessageValidationService _validationService;
     private readonly ISapService _sapService;
     private readonly ISalesforceService _salesforceService;
@@ -22,7 +21,6 @@ public class OrdersController : ControllerBase
     public OrdersController(
         AppDbContext context,
         IRabbitMqService rabbitMqService,
-        IRabbitMqAdvancedService rabbitMqAdvancedService,
         IMessageValidationService validationService,
         ISapService sapService,
         ISalesforceService salesforceService,
@@ -30,7 +28,6 @@ public class OrdersController : ControllerBase
     {
         _context = context;
         _rabbitMqService = rabbitMqService;
-        _rabbitMqAdvancedService = rabbitMqAdvancedService;
         _validationService = validationService;
         _sapService = sapService;
         _salesforceService = salesforceService;
@@ -210,9 +207,9 @@ public class OrdersController : ControllerBase
                 
                 if (isValid)
                 {
-                    // ?? Publish to Advanced RabbitMQ (Topic Exchange)
-                    await _rabbitMqAdvancedService.PublishOrderEventAsync("created", orderMessage);
-                    _logger.LogInformation($"? Order gepubliceerd naar RabbitMQ (orders.topic): {order.OrderNummer}");
+                    // ?? Publish to RabbitMQ (salesforce_orders queue)
+                    await _rabbitMqService.PublishOrderToSalesforceAsync(orderMessage);
+                    _logger.LogInformation($"?? Order gepubliceerd naar RabbitMQ: {order.OrderNummer}");
                 }
                 else
                 {
